@@ -1,0 +1,77 @@
+{
+  "kind": "build_request",
+  "title": "Add UPI payout details for cash rewards in the ad-watching app",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Extend backend data models and APIs to support UPI payout details for cash redemptions: add an optional UPI ID field to the caller's user profile, allow users to set/update it, and store the UPI ID on each cash RewardRequest at the time of redemption so admins can see where to pay.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Not create ads the web that show ads and get paid to watching it to upi or google play store"
+        ]
+      },
+      "acceptanceCriteria": [
+        "UserProfile includes an optional UPI ID field (e.g., upiId : ?Text) exposed via Candid.",
+        "Backend provides a shared method for users to set/update their own UPI ID, enforcing #user permission like other profile methods.",
+        "redeemReward for #cash requires a UPI ID to be present (either passed explicitly or available on the profile), otherwise returns a clear error.",
+        "RewardRequest stores the UPI ID (or payout details) for #cash requests so that it is immutable for that request and viewable by admins.",
+        "Existing reward request flows (pending/approve/reject/refund) continue to work with the new fields."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Update the frontend user flow to collect and use a user's UPI ID for cash payouts: allow entering/editing UPI ID in the profile setup or user settings area, require it when submitting a cash redemption, and show it in the admin payout management list for pending requests.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Not create ads the web that show ads and get paid to watching it to upi or google play store"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Profile setup (or an equivalent user profile edit UI) includes a labeled input for UPI ID and saves it to the backend profile without breaking existing name/points behavior.",
+        "Rewards redeem dialog prevents submitting a cash redemption unless a non-empty UPI ID is available, and displays a clear inline validation message in English.",
+        "Admin Payout Management displays the UPI ID (or payout detail) for cash reward requests; gift card requests do not show UPI details.",
+        "React Query hooks in frontend/src/hooks/useQueries.ts are updated (or extended) to call any new backend methods and invalidate the same relevant caches (currentUserProfile, userRewards, pendingRewardRequests)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Clarify user-facing copy that cash payouts are processed via UPI based on the stored UPI ID and are admin-approved (manual), without claiming automated UPI transfers or Google Play Store distribution.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "...get paid to watching it to upi or google play store"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Landing page and/or rewards redemption UI text mentions UPI for cash rewards and that payouts are processed after admin approval.",
+        "No UI text claims that the app automatically sends UPI payments from the canister or that it is published on Google Play Store."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not modify files under frontend/src/components/ui or other paths listed in SYSTEM_CONTEXT.frontend.immutablePaths.",
+    "No integration with external payment rails/APIs; UPI payout handling must remain an informational/manual admin processing workflow."
+  ],
+  "nonGoals": [
+    "Building an Android app bundle/APK or publishing the app to the Google Play Store.",
+    "Implementing automated UPI money transfer APIs or any third-party payment gateway integration.",
+    "Adding third-party authentication providers beyond Internet Identity."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

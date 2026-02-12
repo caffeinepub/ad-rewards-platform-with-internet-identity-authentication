@@ -1,0 +1,85 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-12T19:45:57.360Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 3,
+    "implemented": 2,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Extend backend data models and APIs to support UPI payout details for cash redemptions: add an optional UPI ID field to the caller's user profile, allow users to set/update it, and store the UPI ID on each cash RewardRequest at the time of redemption so admins can see where to pay.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Update the frontend user flow to collect and use a user's UPI ID for cash payouts: allow entering/editing UPI ID in the profile setup or user settings area, require it when submitting a cash redemption, and show it in the admin payout management list for pending requests.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/ProfileSetupModal.tsx",
+          "frontend/src/components/user/RewardsSection.tsx",
+          "frontend/src/components/admin/PayoutManagementSection.tsx",
+          "frontend/src/backend.d.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/ProfileSetupModal.tsx",
+          "frontend/src/components/user/RewardsSection.tsx",
+          "frontend/src/components/admin/PayoutManagementSection.tsx",
+          "frontend/src/backend.d.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Clarify user-facing copy that cash payouts are processed via UPI based on the stored UPI ID and are admin-approved (manual), without claiming automated UPI transfers or Google Play Store distribution.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/LandingPage.tsx",
+          "frontend/src/components/user/RewardsSection.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/LandingPage.tsx",
+          "frontend/src/components/user/RewardsSection.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "build-template/Dockerfile",
+    "build-template/LICENSE",
+    "build-template/README.md",
+    "build-template/deploy.sh",
+    "build-template/icp.yaml",
+    "build-template/src/backend/canister.yaml",
+    "build-template/src/frontend/canister.yaml",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/ProfileSetupModal.tsx",
+    "frontend/src/components/admin/PayoutManagementSection.tsx",
+    "frontend/src/components/user/RewardsSection.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/LandingPage.tsx",
+    "frontend/src/types/rewards.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

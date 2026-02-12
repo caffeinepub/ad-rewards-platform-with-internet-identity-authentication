@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useRedeemReward } from '../../hooks/useQueries';
-import type { RewardRequest } from '../../backend';
-import { RewardType, RewardStatus } from '../../backend';
+import { useState, useEffect } from 'react';
+import { useRedeemReward, useGetCallerUserProfile, useSetCallerUpiId, useGetUserRewards } from '../../hooks/useQueries';
+import type { RewardRequest } from '../../types/rewards';
+import { RewardStatus } from '../../types/rewards';
+import { RewardType } from '../../backend';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Gift, DollarSign, CreditCard, Plus } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Gift, DollarSign, CreditCard, Plus, AlertCircle } from 'lucide-react';
 
 interface RewardsSectionProps {
   rewards: RewardRequest[];
@@ -21,20 +23,60 @@ export default function RewardsSection({ rewards, isLoading, userPoints }: Rewar
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
   const [rewardType, setRewardType] = useState<'cash' | 'giftCard'>('cash');
   const [amount, setAmount] = useState('');
-  const { mutate: redeemReward, isPending } = useRedeemReward();
+  const [upiId, setUpiId] = useState('');
+  const [showUpiInput, setShowUpiInput] = useState(false);
+  
+  const { data: userProfile } = useGetCallerUserProfile();
+  const { mutate: redeemReward, isPending: isRedeeming } = useRedeemReward();
+  const { mutate: saveUpiId, isPending: isSavingUpi } = useSetCallerUpiId();
+
+  const currentUpiId = userProfile?.upiId || '';
+  const hasUpiId = currentUpiId && currentUpiId.length > 0;
+
+  useEffect(() => {
+    if (userProfile?.upiId) {
+      setUpiId(userProfile.upiId);
+    }
+  }, [userProfile]);
 
   const handleRedeem = () => {
     const amountNum = parseInt(amount);
     if (amountNum > 0 && amountNum <= userPoints) {
-      redeemReward(
-        { rewardType: RewardType[rewardType], amount: BigInt(amountNum) },
-        {
+      // For cash redemptions, check UPI ID
+      if (rewardType === 'cash' && !hasUpiId && !upiId.trim()) {
+        setShowUpiInput(true);
+        return;
+      }
+
+      // If UPI ID was just entered, save it first
+      if (rewardType === 'cash' && !hasUpiId && upiId.trim()) {
+        saveUpiId(upiId.trim(), {
           onSuccess: () => {
-            setShowRedeemDialog(false);
-            setAmount('');
+            // After saving UPI, proceed with redemption
+            redeemReward(
+              { rewardType: RewardType[rewardType], amount: BigInt(amountNum) },
+              {
+                onSuccess: () => {
+                  setShowRedeemDialog(false);
+                  setAmount('');
+                  setShowUpiInput(false);
+                },
+              }
+            );
           },
-        }
-      );
+        });
+      } else {
+        redeemReward(
+          { rewardType: RewardType[rewardType], amount: BigInt(amountNum) },
+          {
+            onSuccess: () => {
+              setShowRedeemDialog(false);
+              setAmount('');
+              setShowUpiInput(false);
+            },
+          }
+        );
+      }
     }
   };
 
@@ -52,6 +94,10 @@ export default function RewardsSection({ rewards, isLoading, userPoints }: Rewar
   const getRewardTypeIcon = (type: RewardType) => {
     return type === RewardType.cash ? <DollarSign className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />;
   };
+
+  const isPending = isRedeeming || isSavingUpi;
+  const canRedeem = amount && parseInt(amount) > 0 && parseInt(amount) <= userPoints;
+  const needsUpiForCash = rewardType === 'cash' && !hasUpiId;
 
   if (isLoading) {
     return (
@@ -136,11 +182,47 @@ export default function RewardsSection({ rewards, isLoading, userPoints }: Rewar
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="cash">Cash (UPI)</SelectItem>
                   <SelectItem value="giftCard">Gift Card</SelectItem>
                 </SelectContent>
               </Select>
+              {rewardType === 'cash' && (
+                <p className="text-xs text-muted-foreground">
+                  Cash rewards are processed via UPI after admin approval. Minimum: 50 points.
+                </p>
+              )}
+              {rewardType === 'giftCard' && (
+                <p className="text-xs text-muted-foreground">
+                  Gift cards are processed after admin approval. Minimum: 500 points.
+                </p>
+              )}
             </div>
+
+            {needsUpiForCash && (showUpiInput || !hasUpiId) && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">UPI ID Required for Cash Redemption</p>
+                    <div className="space-y-2">
+                      <Label htmlFor="upiIdInput">Enter your UPI ID</Label>
+                      <Input
+                        id="upiIdInput"
+                        type="text"
+                        placeholder="yourname@upi"
+                        value={upiId}
+                        onChange={(e) => setUpiId(e.target.value)}
+                        disabled={isPending}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your UPI ID will be saved for future redemptions.
+                      </p>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="amount">Points to Redeem</Label>
               <Input
@@ -164,7 +246,7 @@ export default function RewardsSection({ rewards, isLoading, userPoints }: Rewar
             </Button>
             <Button
               onClick={handleRedeem}
-              disabled={isPending || !amount || parseInt(amount) <= 0 || parseInt(amount) > userPoints}
+              disabled={isPending || !canRedeem || (needsUpiForCash && !upiId.trim())}
             >
               {isPending ? (
                 <>

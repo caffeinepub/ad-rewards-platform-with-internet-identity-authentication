@@ -1,0 +1,63 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-12T19:45:57.357Z",
+  "summary": "Diff implements UPI ID fields in backend UserProfile/RewardRequest types, adds a setter API for caller UPI ID, and updates frontend profile setup, rewards redemption flow, admin payout list, and landing page copy. However, the diff evidence does not clearly show that cash redemptions are blocked server-side without a UPI ID and that the UPI ID is persisted immutably onto each cash RewardRequest at redemption time. React Query cache invalidation for reward/pending requests is also not evidenced.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "redeemReward for #cash requires a UPI ID to be present (either passed explicitly or available on the profile), otherwise returns a clear error; and RewardRequest stores the UPI ID for #cash requests immutably and viewable by admins.",
+      "reason": "backend/main.mo is truncated before the redeemReward implementation; the diff summary only shows type additions (upiId fields) and UPI getter/setter methods, not the redemption-time validation and persistence of upiId onto newly created cash RewardRequests.",
+      "evidence": [
+        "backend/main.mo (truncated; redeemReward not shown)",
+        "backend/migration.mo (only sets upiId=null for existing records)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "React Query hooks are updated (or extended) to call any new backend methods and invalidate the same relevant caches (currentUserProfile, userRewards, pendingRewardRequests).",
+      "reason": "The visible portion of useQueries.ts shows invalidation for currentUserProfile and callerUpiId, but does not show invalidation for userRewards or pendingRewardRequests; redeemReward and pending reward request hooks are truncated and useGetUserRewards is explicitly disabled/returns empty.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts (truncated: shows invalidateQueries for currentUserProfile and callerUpiId; useGetUserRewards returns [] and enabled:false)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Added backend migration module and wired migration runner.",
+      "reason": "BuildRequest did not request adding a migration facility/module; it only required extending data models/APIs within the single Motoko actor constraint.",
+      "evidence": [
+        "backend/migration.mo",
+        "backend/main.mo (with migration = Migration.run)"
+      ]
+    },
+    {
+      "description": "Added backend query methods to read UPI IDs (getCallerUpiId, getUserUpiId).",
+      "reason": "BuildRequest only required a method for users to set/update their own UPI ID and to store it on cash RewardRequests; explicit read/query endpoints for UPI IDs were not requested.",
+      "evidence": [
+        "backend/main.mo (UPI Management: getCallerUpiId, getUserUpiId)"
+      ]
+    },
+    {
+      "description": "Added project_state.json containing copy about potential Google Play Store distribution.",
+      "reason": "Not requested by the BuildRequest, and it includes text about Google Play Store distribution (even though the UI copy requirement was about user-facing UI).",
+      "evidence": [
+        "project_state.json"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/ProfileSetupModal.tsx",
+    "frontend/src/components/admin/PayoutManagementSection.tsx",
+    "frontend/src/components/user/RewardsSection.tsx",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/LandingPage.tsx",
+    "frontend/src/types/rewards.ts",
+    "project_state.json"
+  ]
+}

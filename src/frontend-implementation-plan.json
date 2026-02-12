@@ -1,0 +1,64 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Frontend UPI ID collection and manual cash payout messaging",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "summary": "Collect/store a user's UPI ID in profile UI, require it for cash redemptions, and display it in the admin pending payout list; update React Query hooks/caching accordingly.",
+      "acceptanceCriteria": [
+        "Profile setup (or an equivalent user profile edit UI) includes a labeled input for UPI ID and saves it to the backend profile without breaking existing name/points behavior.",
+        "Rewards redeem dialog prevents submitting a cash redemption unless a non-empty UPI ID is available, and displays a clear inline validation message in English.",
+        "Admin Payout Management displays the UPI ID (or payout detail) for cash reward requests; gift card requests do not show UPI details.",
+        "React Query hooks in frontend/src/hooks/useQueries.ts are updated (or extended) to call any new backend methods and invalidate the same relevant caches (currentUserProfile, userRewards, pendingRewardRequests)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add/extend React Query hooks to support UPI ID retrieval and updates using backend capabilities (e.g., getCallerUpiId/setCallerUpiId and/or profile save), and ensure mutations invalidate relevant caches (at minimum: currentUserProfile; also userRewards and pendingRewardRequests where needed). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/ProfileSetupModal.tsx",
+          "operation": "modify",
+          "description": "Extend the profile setup form to include a labeled UPI ID input (optional), and persist it alongside the existing name/points behavior via the existing profile save flow. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/user/RewardsSection.tsx",
+          "operation": "modify",
+          "description": "Update the redeem dialog to (1) detect the user's current UPI ID (from cached profile and/or a dedicated UPI query), (2) block cash redemption when UPI ID is empty, showing a clear inline English validation message, and (3) optionally allow saving/updating UPI ID from within the dialog before enabling submission. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/admin/PayoutManagementSection.tsx",
+          "operation": "modify",
+          "description": "Display UPI payout detail for pending cash reward requests (only), while keeping gift card requests free of UPI fields; render defensively for optional/missing UPI fields to avoid runtime errors. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "Update frontend type declarations to reflect the UPI-related fields used by the UI (UserProfile already includes upiId; extend RewardRequest typing to include an optional UPI/payout detail field for cash requests if needed for admin list rendering). Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Update user-facing copy to clearly describe cash rewards as UPI-based (using stored UPI ID) and manually admin-approved, without claiming automated transfers or Google Play Store distribution.",
+      "acceptanceCriteria": [
+        "Landing page and/or rewards redemption UI text mentions UPI for cash rewards and that payouts are processed after admin approval.",
+        "No UI text claims that the app automatically sends UPI payments from the canister or that it is published on Google Play Store."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/LandingPage.tsx",
+          "operation": "modify",
+          "description": "Adjust landing-page copy to explicitly state that cash rewards are processed via UPI using the user's stored UPI ID and only after admin approval (manual processing), and ensure no text implies automated UPI transfers or Google Play Store distribution. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/user/RewardsSection.tsx",
+          "operation": "modify",
+          "description": "Add/adjust redemption UI helper text (e.g., in the redeem dialog description and/or cash selection area) to clarify UPI-based cash payout using the stored UPI ID and that it is processed manually after admin approval, without implying automatic payments. Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}

@@ -1,33 +1,14 @@
-# Ad Rewards Platform with Internet Identity Authentication
+# Specification
 
-## Overview
-A platform where users can watch advertisements to earn points and redeem rewards, with separate access for users and administrators through Internet Identity authentication.
+## Summary
+**Goal:** Support UPI payout details for cash reward redemptions so users can provide a UPI ID and admins can see where to pay for approved cash requests.
 
-## Authentication System
-- **Internet Identity Integration**: All users must authenticate using Internet Identity before accessing any functionality
-- **User Roles**: Two distinct user types - regular users and administrators
-- **Login Requirement**: Authentication is mandatory for all platform features
+**Planned changes:**
+- Backend: Add optional UPI ID to user profiles, expose it via API, and provide a user method to set/update their own UPI ID.
+- Backend: Require a UPI ID for cash reward redemption and store the UPI ID on each cash RewardRequest at redemption time for admin visibility (immutable per request).
+- Frontend: Add UI to enter/edit UPI ID in profile/setup/settings and save it to the backend.
+- Frontend: Validate that cash redemption cannot be submitted without a non-empty UPI ID and show a clear inline English error.
+- Frontend: Show UPI ID for cash requests in the admin payout management list (not for gift card requests) and update React Query hooks/caching to include new calls and invalidations.
+- Frontend: Update user-facing copy to state cash payouts are via UPI based on stored UPI ID and are manually admin-approved (no claims of automated transfers or Google Play Store distribution).
 
-## User Features
-- **Ad Viewing**: Users can watch advertisements to earn points
-- **Points System**: Track accumulated points from watching ads
-- **Rewards Redemption**: Users can redeem earned points for rewards
-- **Account Management**: View personal point balance and redemption history
-
-## Administrator Features
-- **Admin Dashboard**: Dedicated interface for platform management
-- **Ad Management**: Create, edit, and manage advertisements displayed to users
-- **Payout Management**: Handle and process user reward redemption requests
-- **User Analytics**: View platform usage and user engagement metrics
-
-## Backend Data Storage
-- **User Profiles**: Store user authentication data, point balances, and redemption history
-- **Advertisement Data**: Store ad content, metadata, and tracking information
-- **Payout Requests**: Manage pending and completed reward redemption requests
-- **Admin Accounts**: Maintain administrator access credentials and permissions
-
-## Core Operations
-- **Authentication Verification**: Validate Internet Identity credentials and user roles
-- **Point Tracking**: Award points for completed ad views and deduct for redemptions
-- **Ad Serving**: Deliver advertisements to authenticated users
-- **Payout Processing**: Handle reward redemption workflows from request to completion
+**User-visible outcome:** Users can add their UPI ID and must provide it to redeem cash rewards; admins can view the UPI ID on pending cash payout requests and process payouts manually after approval.

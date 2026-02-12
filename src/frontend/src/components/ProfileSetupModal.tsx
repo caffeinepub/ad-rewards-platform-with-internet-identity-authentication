@@ -8,12 +8,17 @@ import { UserCircle } from 'lucide-react';
 
 export default function ProfileSetupModal() {
   const [name, setName] = useState('');
+  const [upiId, setUpiId] = useState('');
   const { mutate: saveProfile, isPending } = useSaveCallerUserProfile();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      saveProfile({ name: name.trim(), points: BigInt(0) });
+      saveProfile({ 
+        name: name.trim(), 
+        points: BigInt(0),
+        upiId: upiId.trim() || undefined
+      });
     }
   };
 
@@ -43,6 +48,20 @@ export default function ProfileSetupModal() {
                 disabled={isPending}
                 autoFocus
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="upiId">UPI ID (Optional)</Label>
+              <Input
+                id="upiId"
+                type="text"
+                placeholder="yourname@upi"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                disabled={isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Required for cash reward redemptions. You can add this later.
+              </p>
             </div>
             <Button type="submit" className="w-full" disabled={isPending || !name.trim()}>
               {isPending ? (

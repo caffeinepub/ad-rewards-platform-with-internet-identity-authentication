@@ -7,14 +7,6 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export type UserId = Principal;
-export interface RewardRequest {
-    id: string;
-    status: RewardStatus;
-    userId: UserId;
-    rewardType: RewardType;
-    amount: bigint;
-}
 export interface Advertisement {
     id: string;
     title: string;
@@ -24,16 +16,25 @@ export interface Advertisement {
 }
 export interface UserProfile {
     name: string;
+    upiId?: string;
     points: bigint;
+}
+export interface RewardRequest {
+    id: string;
+    userId: Principal;
+    rewardType: RewardType;
+    amount: bigint;
+    status: RewardStatus;
+    upiId?: string;
+}
+export enum RewardType {
+    cash = "cash",
+    giftCard = "giftCard"
 }
 export enum RewardStatus {
     pending = "pending",
     approved = "approved",
     rejected = "rejected"
-}
-export enum RewardType {
-    cash = "cash",
-    giftCard = "giftCard"
 }
 export enum UserRole {
     admin = "admin",
@@ -46,23 +47,15 @@ export interface backendInterface {
     createAd(title: string, content: string, pointsReward: bigint): Promise<string>;
     deleteAd(adId: string): Promise<void>;
     getActiveAds(): Promise<Array<Advertisement>>;
-    getAllAds(): Promise<Array<Advertisement>>;
-    getAllRewardRequests(): Promise<Array<RewardRequest>>;
+    getCallerUpiId(): Promise<string | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getPendingRewardRequests(): Promise<Array<RewardRequest>>;
-    getPoints(): Promise<bigint>;
-    getUserAnalytics(): Promise<{
-        totalUsers: bigint;
-        totalPoints: bigint;
-        totalRewardRequests: bigint;
-    }>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
-    getUserRewards(): Promise<Array<RewardRequest>>;
+    getUserUpiId(user: Principal): Promise<string | null>;
     isCallerAdmin(): Promise<boolean>;
     redeemReward(rewardType: RewardType, amount: bigint): Promise<string>;
-    rejectRewardRequest(requestId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setCallerUpiId(upiId: string): Promise<void>;
     updateAd(adId: string, title: string, content: string, pointsReward: bigint, active: boolean): Promise<void>;
     watchAd(adId: string): Promise<bigint>;
 }

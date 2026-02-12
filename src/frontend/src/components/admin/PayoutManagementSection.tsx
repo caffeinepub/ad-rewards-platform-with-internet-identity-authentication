@@ -1,6 +1,6 @@
 import { useGetPendingRewardRequests, useApproveRewardRequest, useRejectRewardRequest } from '../../hooks/useQueries';
-import type { RewardRequest } from '../../backend';
-import { RewardType, RewardStatus } from '../../backend';
+import type { RewardRequest } from '../../types/rewards';
+import { RewardType } from '../../backend';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -59,12 +59,17 @@ export default function PayoutManagementSection() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                       {getRewardTypeIcon(request.rewardType)}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-lg">
                         {request.rewardType === RewardType.cash ? 'Cash Reward' : 'Gift Card'}
                       </CardTitle>
-                      <CardDescription>
-                        {Number(request.amount)} points • User: {request.userId.toString().slice(0, 10)}...
+                      <CardDescription className="space-y-1">
+                        <div>{Number(request.amount)} points • User: {request.userId.toString().slice(0, 10)}...</div>
+                        {request.rewardType === RewardType.cash && request.upiId && (
+                          <div className="font-mono text-sm">
+                            <span className="font-semibold">UPI ID:</span> {request.upiId}
+                          </div>
+                        )}
                       </CardDescription>
                     </div>
                   </div>

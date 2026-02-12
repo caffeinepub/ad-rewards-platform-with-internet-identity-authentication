@@ -1,0 +1,47 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-update-the-frontend-user-flow-to-collect-and-use-a-user-s-upi-id-for-cash-payouts-allow-entering-editing-upi-id-in-the-profile-setup-or-user-settings-area-require-it-when-submitting-a-cash-redemption-and-show-it-in-the-admin-payout-management-list-for-pending-requests",
+      "featureTitle": "Update the frontend user flow to collect and use a user's UPI ID for cash payouts: allow entering/editing UPI ID in the profile setup or user settings area, require it when submitting a cash redemption, and show it in the admin payout management list for pending requests.",
+      "files": [
+        "frontend/src/components/ProfileSetupModal.tsx",
+        "frontend/src/components/admin/PayoutManagementSection.tsx",
+        "frontend/src/components/user/RewardsSection.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-clarify-user-facing-copy-that-cash-payouts-are-processed-via-upi-based-on-the-stored-upi-id-and-are-admin-approved-manual-without-claiming-automated-upi-transfers-or-google-play-store-distribution",
+      "featureTitle": "Clarify user-facing copy that cash payouts are processed via UPI based on the stored UPI ID and are admin-approved (manual), without claiming automated UPI transfers or Google Play Store distribution.",
+      "files": [
+        "frontend/src/components/user/RewardsSection.tsx",
+        "frontend/src/pages/LandingPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

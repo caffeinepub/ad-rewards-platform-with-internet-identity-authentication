@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Create an ad-watching platform (web/app) where users watch ads and earn payouts via UPI, potentially distributed through Google Play Store.",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-update-the-frontend-user-flow-to-collect-and-use-a-user-s-upi-id-for-cash-payouts-allow-entering-editing-upi-id-in-the-profile-setup-or-user-settings-area-require-it-when-submitting-a-cash-redemption-and-show-it-in-the-admin-payout-management-list-for-pending-requests",
+      "title": "Update the frontend user flow to collect and use a user's UPI ID for cash payouts: allow entering/editing UPI ID in the profile setup or user settings area, require it when submitting a cash redemption, and show it in the admin payout management list for pending requests.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-clarify-user-facing-copy-that-cash-payouts-are-processed-via-upi-based-on-the-stored-upi-id-and-are-admin-approved-manual-without-claiming-automated-upi-transfers-or-google-play-store-distribution",
+      "title": "Clarify user-facing copy that cash payouts are processed via UPI based on the stored UPI ID and are admin-approved (manual), without claiming automated UPI transfers or Google Play Store distribution.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Build an ad-watching platform where users view ads and earn money, with payout support via UPI and/or distribution through Google Play Store",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Extend backend data models and APIs to support UPI payout details for cash redemptions: add an optional UPI ID field to the caller's user profile, allow users to set/update it, and store the UPI ID on each cash RewardRequest at the time of redemption so admins can see where to pay.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Add UPI payout details for cash rewards in the ad-watching app",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

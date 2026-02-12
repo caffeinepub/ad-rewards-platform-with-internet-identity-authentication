@@ -17,20 +17,13 @@ export interface Advertisement {
   'content' : string,
   'pointsReward' : bigint,
 }
-export interface RewardRequest {
-  'id' : string,
-  'status' : RewardStatus,
-  'userId' : UserId,
-  'rewardType' : RewardType,
-  'amount' : bigint,
-}
-export type RewardStatus = { 'pending' : null } |
-  { 'approved' : null } |
-  { 'rejected' : null };
 export type RewardType = { 'cash' : null } |
   { 'giftCard' : null };
-export type UserId = Principal;
-export interface UserProfile { 'name' : string, 'points' : bigint }
+export interface UserProfile {
+  'name' : string,
+  'upiId' : [] | [string],
+  'points' : bigint,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -41,26 +34,15 @@ export interface _SERVICE {
   'createAd' : ActorMethod<[string, string, bigint], string>,
   'deleteAd' : ActorMethod<[string], undefined>,
   'getActiveAds' : ActorMethod<[], Array<Advertisement>>,
-  'getAllAds' : ActorMethod<[], Array<Advertisement>>,
-  'getAllRewardRequests' : ActorMethod<[], Array<RewardRequest>>,
+  'getCallerUpiId' : ActorMethod<[], [] | [string]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getPendingRewardRequests' : ActorMethod<[], Array<RewardRequest>>,
-  'getPoints' : ActorMethod<[], bigint>,
-  'getUserAnalytics' : ActorMethod<
-    [],
-    {
-      'totalUsers' : bigint,
-      'totalPoints' : bigint,
-      'totalRewardRequests' : bigint,
-    }
-  >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
-  'getUserRewards' : ActorMethod<[], Array<RewardRequest>>,
+  'getUserUpiId' : ActorMethod<[Principal], [] | [string]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'redeemReward' : ActorMethod<[RewardType, bigint], string>,
-  'rejectRewardRequest' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setCallerUpiId' : ActorMethod<[string], undefined>,
   'updateAd' : ActorMethod<
     [string, string, string, bigint, boolean],
     undefined

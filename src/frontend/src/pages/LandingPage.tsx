@@ -15,7 +15,7 @@ export default function LandingPage() {
     {
       icon: Gift,
       title: 'Redeem Rewards',
-      description: 'Exchange your points for cash or gift cards',
+      description: 'Exchange your points for cash via UPI or gift cards',
     },
     {
       icon: TrendingUp,
@@ -41,7 +41,7 @@ export default function LandingPage() {
             Watch Ads, Earn Rewards
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Turn your attention into rewards. Watch advertisements, accumulate points, and redeem them for real rewards.
+            Turn your attention into rewards. Watch advertisements, accumulate points, and redeem them for cash via UPI or gift cards.
           </p>
           <div className="flex justify-center gap-4 pt-4">
             <Button
@@ -87,7 +87,7 @@ export default function LandingPage() {
             {[
               { step: '1', title: 'Sign In', description: 'Login securely with Internet Identity' },
               { step: '2', title: 'Watch Ads', description: 'Browse and watch available advertisements' },
-              { step: '3', title: 'Get Rewarded', description: 'Redeem your points for real rewards' },
+              { step: '3', title: 'Get Rewarded', description: 'Redeem points for cash (via UPI) or gift cards after admin approval' },
             ].map((item) => (
               <Card key={item.step} className="text-center">
                 <CardHeader>
@@ -101,6 +101,17 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
+
+        {/* Additional Info */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-center">Cash Rewards via UPI</CardTitle>
+            <CardDescription className="text-center">
+              Cash redemptions are processed manually by our admin team and sent directly to your UPI ID. 
+              Make sure to add your UPI ID in your profile to enable cash withdrawals.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     </div>
   );

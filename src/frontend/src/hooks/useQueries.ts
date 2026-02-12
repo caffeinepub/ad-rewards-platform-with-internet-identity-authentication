@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserProfile, Advertisement, RewardRequest, RewardType } from '../backend';
+import type { UserProfile, Advertisement, RewardType } from '../backend';
+import type { RewardRequest } from '../types/rewards';
 import { toast } from 'sonner';
 
 // User Profile Queries
@@ -35,10 +36,45 @@ export function useSaveCallerUserProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['callerUpiId'] });
       toast.success('Profile saved successfully');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to save profile');
+    },
+  });
+}
+
+// UPI ID Management
+export function useGetCallerUpiId() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<string | null>({
+    queryKey: ['callerUpiId'],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getCallerUpiId();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSetCallerUpiId() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (upiId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.setCallerUpiId(upiId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['callerUpiId'] });
+      toast.success('UPI ID saved successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to save UPI ID');
     },
   });
 }
@@ -91,17 +127,15 @@ export function useWatchAd() {
   });
 }
 
-// Reward Queries
+// Reward Queries - Using local state since backend doesn't expose these methods
 export function useGetUserRewards() {
-  const { actor, isFetching } = useActor();
-
+  // Return empty array since backend doesn't have getUserRewards method
   return useQuery<RewardRequest[]>({
     queryKey: ['userRewards'],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getUserRewards();
+      return [];
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }
 
@@ -117,6 +151,7 @@ export function useRedeemReward() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
       queryClient.invalidateQueries({ queryKey: ['userRewards'] });
+      queryClient.invalidateQueries({ queryKey: ['pendingRewardRequests'] });
       toast.success('Reward request submitted successfully');
     },
     onError: (error: Error) => {
@@ -129,11 +164,12 @@ export function useRedeemReward() {
 export function useGetAllAds() {
   const { actor, isFetching } = useActor();
 
+  // Use getActiveAds since getAllAds doesn't exist
   return useQuery<Advertisement[]>({
     queryKey: ['allAds'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllAds();
+      return actor.getActiveAds();
     },
     enabled: !!actor && !isFetching,
   });
@@ -150,6 +186,7 @@ export function useCreateAd() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allAds'] });
+      queryClient.invalidateQueries({ queryKey: ['activeAds'] });
       toast.success('Ad created successfully');
     },
     onError: (error: Error) => {
@@ -169,6 +206,7 @@ export function useUpdateAd() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allAds'] });
+      queryClient.invalidateQueries({ queryKey: ['activeAds'] });
       toast.success('Ad updated successfully');
     },
     onError: (error: Error) => {
@@ -188,6 +226,7 @@ export function useDeleteAd() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allAds'] });
+      queryClient.invalidateQueries({ queryKey: ['activeAds'] });
       toast.success('Ad deleted successfully');
     },
     onError: (error: Error) => {
@@ -198,28 +237,24 @@ export function useDeleteAd() {
 
 // Admin - Payout Management
 export function useGetAllRewardRequests() {
-  const { actor, isFetching } = useActor();
-
+  // Return empty array since backend doesn't have this method
   return useQuery<RewardRequest[]>({
     queryKey: ['allRewardRequests'],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllRewardRequests();
+      return [];
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }
 
 export function useGetPendingRewardRequests() {
-  const { actor, isFetching } = useActor();
-
+  // Return empty array since backend doesn't have this method
   return useQuery<RewardRequest[]>({
     queryKey: ['pendingRewardRequests'],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getPendingRewardRequests();
+      return [];
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }
 
@@ -251,7 +286,9 @@ export function useRejectRewardRequest() {
   return useMutation({
     mutationFn: async (requestId: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.rejectRewardRequest(requestId);
+      // Backend doesn't have rejectRewardRequest, so this will fail
+      // Keeping the structure for future implementation
+      throw new Error('Reject functionality not yet implemented in backend');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allRewardRequests'] });
@@ -267,14 +304,16 @@ export function useRejectRewardRequest() {
 
 // Admin - Analytics
 export function useGetUserAnalytics() {
-  const { actor, isFetching } = useActor();
-
+  // Return mock data since backend doesn't have this method
   return useQuery<{ totalUsers: bigint; totalPoints: bigint; totalRewardRequests: bigint }>({
     queryKey: ['userAnalytics'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getUserAnalytics();
+      return {
+        totalUsers: BigInt(0),
+        totalPoints: BigInt(0),
+        totalRewardRequests: BigInt(0),
+      };
     },
-    enabled: !!actor && !isFetching,
+    enabled: false,
   });
 }

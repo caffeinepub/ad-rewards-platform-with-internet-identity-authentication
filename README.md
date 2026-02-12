@@ -1,2 +1,3 @@
-# ad-rewards-platform-with-internet-identity-authentication
-Exported from Caffeine project: Ad Rewards Platform with Internet Identity Authentication
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`
