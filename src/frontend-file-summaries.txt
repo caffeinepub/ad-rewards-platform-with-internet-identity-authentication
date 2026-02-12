@@ -1,0 +1,16 @@
+{
+  "frontend/src/App.tsx": "Main application component that handles authentication state, profile setup flow, and renders appropriate dashboard (user or admin) based on role with loading states and theme provider.",
+  "frontend/src/hooks/useQueries.ts": "Comprehensive React Query hooks for all backend operations including user profiles, ads, rewards, admin functions, and analytics with proper error handling and cache invalidation.",
+  "frontend/src/components/Header.tsx": "Application header with branding, user info display, theme toggle, and login/logout functionality with proper state management.",
+  "frontend/src/components/Footer.tsx": "Simple footer component with copyright notice and caffeine.ai attribution link.",
+  "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog for first-time user profile setup that prompts for name entry before accessing the platform.",
+  "frontend/src/pages/LandingPage.tsx": "Landing page for unauthenticated users featuring hero section, feature highlights, and how-it-works explanation with call-to-action.",
+  "frontend/src/pages/UserDashboard.tsx": "User dashboard with tabbed interface for watching ads and managing reward redemptions, displaying current points balance.",
+  "frontend/src/pages/AdminDashboard.tsx": "Admin dashboard with tabbed interface for analytics, ad management, and payout processing.",
+  "frontend/src/components/user/AdsSection.tsx": "User interface for browsing and watching active advertisements with modal dialog for ad viewing and point claiming.",
+  "frontend/src/components/user/RewardsSection.tsx": "User interface for viewing redemption history and creating new reward requests with form validation.",
+  "frontend/src/components/admin/AnalyticsSection.tsx": "Admin analytics dashboard displaying platform statistics including total users, points, and reward requests.",
+  "frontend/src/components/admin/AdManagementSection.tsx": "Admin interface for creating, editing, and deleting advertisements with full CRUD operations and status management.",
+  "frontend/src/components/admin/PayoutManagementSection.tsx": "Admin interface for reviewing and processing pending reward redemption requests with approve/reject actions.",
+  "frontend/src/index.css": "Global styles with OKLCH color system featuring vibrant purple primary color and comprehensive light/dark mode support."
+}
