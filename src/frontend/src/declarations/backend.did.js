@@ -20,14 +20,33 @@ export const Advertisement = IDL.Record({
   'content' : IDL.Text,
   'pointsReward' : IDL.Nat,
 });
+export const RewardStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const UserId = IDL.Principal;
+export const RewardType = IDL.Variant({
+  'cash' : IDL.Null,
+  'giftCard' : IDL.Null,
+});
+export const RewardRequest = IDL.Record({
+  'id' : IDL.Text,
+  'status' : RewardStatus,
+  'userId' : UserId,
+  'rewardType' : RewardType,
+  'upiId' : IDL.Opt(IDL.Text),
+  'amount' : IDL.Nat,
+});
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'upiId' : IDL.Opt(IDL.Text),
   'points' : IDL.Nat,
 });
-export const RewardType = IDL.Variant({
-  'cash' : IDL.Null,
-  'giftCard' : IDL.Null,
+export const PlatformStats = IDL.Record({
+  'totalPointsIssued' : IDL.Nat,
+  'totalUsers' : IDL.Nat,
+  'totalRewardRequests' : IDL.Nat,
 });
 
 export const idlService = IDL.Service({
@@ -37,9 +56,18 @@ export const idlService = IDL.Service({
   'createAd' : IDL.Func([IDL.Text, IDL.Text, IDL.Nat], [IDL.Text], []),
   'deleteAd' : IDL.Func([IDL.Text], [], []),
   'getActiveAds' : IDL.Func([], [IDL.Vec(Advertisement)], ['query']),
+  'getAds' : IDL.Func([], [IDL.Vec(Advertisement)], ['query']),
+  'getAllRewardRequests' : IDL.Func([], [IDL.Vec(RewardRequest)], ['query']),
+  'getCallerRewardRequests' : IDL.Func([], [IDL.Vec(RewardRequest)], ['query']),
   'getCallerUpiId' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getPendingRewardRequests' : IDL.Func(
+      [],
+      [IDL.Vec(RewardRequest)],
+      ['query'],
+    ),
+  'getStats' : IDL.Func([], [PlatformStats], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -48,6 +76,7 @@ export const idlService = IDL.Service({
   'getUserUpiId' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'redeemReward' : IDL.Func([RewardType, IDL.Nat], [IDL.Text], []),
+  'rejectRewardRequest' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setCallerUpiId' : IDL.Func([IDL.Text], [], []),
   'updateAd' : IDL.Func(
@@ -55,6 +84,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'verifyCashPayoutReceived' : IDL.Func([IDL.Text], [], []),
   'watchAd' : IDL.Func([IDL.Text], [IDL.Nat], []),
 });
 
@@ -73,12 +103,31 @@ export const idlFactory = ({ IDL }) => {
     'content' : IDL.Text,
     'pointsReward' : IDL.Nat,
   });
+  const RewardStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const UserId = IDL.Principal;
+  const RewardType = IDL.Variant({ 'cash' : IDL.Null, 'giftCard' : IDL.Null });
+  const RewardRequest = IDL.Record({
+    'id' : IDL.Text,
+    'status' : RewardStatus,
+    'userId' : UserId,
+    'rewardType' : RewardType,
+    'upiId' : IDL.Opt(IDL.Text),
+    'amount' : IDL.Nat,
+  });
   const UserProfile = IDL.Record({
     'name' : IDL.Text,
     'upiId' : IDL.Opt(IDL.Text),
     'points' : IDL.Nat,
   });
-  const RewardType = IDL.Variant({ 'cash' : IDL.Null, 'giftCard' : IDL.Null });
+  const PlatformStats = IDL.Record({
+    'totalPointsIssued' : IDL.Nat,
+    'totalUsers' : IDL.Nat,
+    'totalRewardRequests' : IDL.Nat,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -87,9 +136,22 @@ export const idlFactory = ({ IDL }) => {
     'createAd' : IDL.Func([IDL.Text, IDL.Text, IDL.Nat], [IDL.Text], []),
     'deleteAd' : IDL.Func([IDL.Text], [], []),
     'getActiveAds' : IDL.Func([], [IDL.Vec(Advertisement)], ['query']),
+    'getAds' : IDL.Func([], [IDL.Vec(Advertisement)], ['query']),
+    'getAllRewardRequests' : IDL.Func([], [IDL.Vec(RewardRequest)], ['query']),
+    'getCallerRewardRequests' : IDL.Func(
+        [],
+        [IDL.Vec(RewardRequest)],
+        ['query'],
+      ),
     'getCallerUpiId' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getPendingRewardRequests' : IDL.Func(
+        [],
+        [IDL.Vec(RewardRequest)],
+        ['query'],
+      ),
+    'getStats' : IDL.Func([], [PlatformStats], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -98,6 +160,7 @@ export const idlFactory = ({ IDL }) => {
     'getUserUpiId' : IDL.Func([IDL.Principal], [IDL.Opt(IDL.Text)], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'redeemReward' : IDL.Func([RewardType, IDL.Nat], [IDL.Text], []),
+    'rejectRewardRequest' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setCallerUpiId' : IDL.Func([IDL.Text], [], []),
     'updateAd' : IDL.Func(
@@ -105,6 +168,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'verifyCashPayoutReceived' : IDL.Func([IDL.Text], [], []),
     'watchAd' : IDL.Func([IDL.Text], [IDL.Nat], []),
   });
 };

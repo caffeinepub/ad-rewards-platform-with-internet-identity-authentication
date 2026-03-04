@@ -1,21 +1,26 @@
-import { useInternetIdentity } from './hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useIsCallerAdmin } from './hooks/useQueries';
-import { Toaster } from '@/components/ui/sonner';
-import { ThemeProvider } from 'next-themes';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import ProfileSetupModal from './components/ProfileSetupModal';
-import UserDashboard from './pages/UserDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import LandingPage from './pages/LandingPage';
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
+import ProfileSetupModal from "./components/ProfileSetupModal";
+import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { useGetCallerUserProfile, useIsCallerAdmin } from "./hooks/useQueries";
+import AdminDashboard from "./pages/AdminDashboard";
+import LandingPage from "./pages/LandingPage";
+import UserDashboard from "./pages/UserDashboard";
 
 export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
-  const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
+  const {
+    data: userProfile,
+    isLoading: profileLoading,
+    isFetched,
+  } = useGetCallerUserProfile();
   const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
 
   const isAuthenticated = !!identity;
-  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
+  const showProfileSetup =
+    isAuthenticated && !profileLoading && isFetched && userProfile === null;
 
   if (isInitializing) {
     return (
@@ -43,7 +48,9 @@ export default function App() {
             <div className="flex min-h-[60vh] items-center justify-center">
               <div className="flex flex-col items-center gap-4">
                 <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <p className="text-muted-foreground">Loading your dashboard...</p>
+                <p className="text-muted-foreground">
+                  Loading your dashboard...
+                </p>
               </div>
             </div>
           ) : isAdmin ? (

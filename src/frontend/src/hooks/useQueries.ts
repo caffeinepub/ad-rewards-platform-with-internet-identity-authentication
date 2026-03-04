@@ -1,17 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import type { UserProfile, Advertisement, RewardType } from '../backend';
-import type { RewardRequest } from '../types/rewards';
-import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import type {
+  Advertisement,
+  PlatformStats,
+  RewardRequest,
+  RewardType,
+  UserProfile,
+} from "../backend";
+import { useActor } from "./useActor";
 
 // User Profile Queries
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
   const query = useQuery<UserProfile | null>({
-    queryKey: ['currentUserProfile'],
+    queryKey: ["currentUserProfile"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.getCallerUserProfile();
     },
     enabled: !!actor && !actorFetching,
@@ -31,16 +36,16 @@ export function useSaveCallerUserProfile() {
 
   return useMutation({
     mutationFn: async (profile: UserProfile) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
-      queryClient.invalidateQueries({ queryKey: ['callerUpiId'] });
-      toast.success('Profile saved successfully');
+      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["callerUpiId"] });
+      toast.success("Profile saved successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to save profile');
+      toast.error(error.message || "Failed to save profile");
     },
   });
 }
@@ -50,7 +55,7 @@ export function useGetCallerUpiId() {
   const { actor, isFetching } = useActor();
 
   return useQuery<string | null>({
-    queryKey: ['callerUpiId'],
+    queryKey: ["callerUpiId"],
     queryFn: async () => {
       if (!actor) return null;
       return actor.getCallerUpiId();
@@ -65,16 +70,16 @@ export function useSetCallerUpiId() {
 
   return useMutation({
     mutationFn: async (upiId: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.setCallerUpiId(upiId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
-      queryClient.invalidateQueries({ queryKey: ['callerUpiId'] });
-      toast.success('UPI ID saved successfully');
+      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["callerUpiId"] });
+      toast.success("UPI ID saved successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to save UPI ID');
+      toast.error(error.message || "Failed to save UPI ID");
     },
   });
 }
@@ -84,7 +89,7 @@ export function useIsCallerAdmin() {
   const { actor, isFetching } = useActor();
 
   return useQuery<boolean>({
-    queryKey: ['isAdmin'],
+    queryKey: ["isAdmin"],
     queryFn: async () => {
       if (!actor) return false;
       return actor.isCallerAdmin();
@@ -98,7 +103,7 @@ export function useGetActiveAds() {
   const { actor, isFetching } = useActor();
 
   return useQuery<Advertisement[]>({
-    queryKey: ['activeAds'],
+    queryKey: ["activeAds"],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getActiveAds();
@@ -113,29 +118,31 @@ export function useWatchAd() {
 
   return useMutation({
     mutationFn: async (adId: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.watchAd(adId);
     },
     onSuccess: (newPoints) => {
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
-      queryClient.invalidateQueries({ queryKey: ['activeAds'] });
+      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["activeAds"] });
       toast.success(`Ad watched! You earned points. Total: ${newPoints}`);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to watch ad');
+      toast.error(error.message || "Failed to watch ad");
     },
   });
 }
 
-// Reward Queries - Using local state since backend doesn't expose these methods
+// Reward Queries
 export function useGetUserRewards() {
-  // Return empty array since backend doesn't have getUserRewards method
+  const { actor, isFetching } = useActor();
+
   return useQuery<RewardRequest[]>({
-    queryKey: ['userRewards'],
+    queryKey: ["userRewards"],
     queryFn: async () => {
-      return [];
+      if (!actor) return [];
+      return actor.getCallerRewardRequests();
     },
-    enabled: false,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -144,18 +151,23 @@ export function useRedeemReward() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ rewardType, amount }: { rewardType: RewardType; amount: bigint }) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async ({
+      rewardType,
+      amount,
+    }: { rewardType: RewardType; amount: bigint }) => {
+      if (!actor) throw new Error("Actor not available");
       return actor.redeemReward(rewardType, amount);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
-      queryClient.invalidateQueries({ queryKey: ['userRewards'] });
-      queryClient.invalidateQueries({ queryKey: ['pendingRewardRequests'] });
-      toast.success('Reward request submitted successfully');
+      queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userRewards"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["allRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["platformStats"] });
+      toast.success("Reward request submitted successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to redeem reward');
+      toast.error(error.message || "Failed to redeem reward");
     },
   });
 }
@@ -164,12 +176,11 @@ export function useRedeemReward() {
 export function useGetAllAds() {
   const { actor, isFetching } = useActor();
 
-  // Use getActiveAds since getAllAds doesn't exist
   return useQuery<Advertisement[]>({
-    queryKey: ['allAds'],
+    queryKey: ["allAds"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getActiveAds();
+      return actor.getAds();
     },
     enabled: !!actor && !isFetching,
   });
@@ -180,17 +191,21 @@ export function useCreateAd() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ title, content, pointsReward }: { title: string; content: string; pointsReward: bigint }) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async ({
+      title,
+      content,
+      pointsReward,
+    }: { title: string; content: string; pointsReward: bigint }) => {
+      if (!actor) throw new Error("Actor not available");
       return actor.createAd(title, content, pointsReward);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAds'] });
-      queryClient.invalidateQueries({ queryKey: ['activeAds'] });
-      toast.success('Ad created successfully');
+      queryClient.invalidateQueries({ queryKey: ["allAds"] });
+      queryClient.invalidateQueries({ queryKey: ["activeAds"] });
+      toast.success("Ad created successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create ad');
+      toast.error(error.message || "Failed to create ad");
     },
   });
 }
@@ -200,17 +215,29 @@ export function useUpdateAd() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ adId, title, content, pointsReward, active }: { adId: string; title: string; content: string; pointsReward: bigint; active: boolean }) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async ({
+      adId,
+      title,
+      content,
+      pointsReward,
+      active,
+    }: {
+      adId: string;
+      title: string;
+      content: string;
+      pointsReward: bigint;
+      active: boolean;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
       return actor.updateAd(adId, title, content, pointsReward, active);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAds'] });
-      queryClient.invalidateQueries({ queryKey: ['activeAds'] });
-      toast.success('Ad updated successfully');
+      queryClient.invalidateQueries({ queryKey: ["allAds"] });
+      queryClient.invalidateQueries({ queryKey: ["activeAds"] });
+      toast.success("Ad updated successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update ad');
+      toast.error(error.message || "Failed to update ad");
     },
   });
 }
@@ -221,40 +248,44 @@ export function useDeleteAd() {
 
   return useMutation({
     mutationFn: async (adId: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.deleteAd(adId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allAds'] });
-      queryClient.invalidateQueries({ queryKey: ['activeAds'] });
-      toast.success('Ad deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["allAds"] });
+      queryClient.invalidateQueries({ queryKey: ["activeAds"] });
+      toast.success("Ad deleted successfully");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete ad');
+      toast.error(error.message || "Failed to delete ad");
     },
   });
 }
 
 // Admin - Payout Management
 export function useGetAllRewardRequests() {
-  // Return empty array since backend doesn't have this method
+  const { actor, isFetching } = useActor();
+
   return useQuery<RewardRequest[]>({
-    queryKey: ['allRewardRequests'],
+    queryKey: ["allRewardRequests"],
     queryFn: async () => {
-      return [];
+      if (!actor) return [];
+      return actor.getAllRewardRequests();
     },
-    enabled: false,
+    enabled: !!actor && !isFetching,
   });
 }
 
 export function useGetPendingRewardRequests() {
-  // Return empty array since backend doesn't have this method
+  const { actor, isFetching } = useActor();
+
   return useQuery<RewardRequest[]>({
-    queryKey: ['pendingRewardRequests'],
+    queryKey: ["pendingRewardRequests"],
     queryFn: async () => {
-      return [];
+      if (!actor) return [];
+      return actor.getPendingRewardRequests();
     },
-    enabled: false,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -264,17 +295,18 @@ export function useApproveRewardRequest() {
 
   return useMutation({
     mutationFn: async (requestId: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       return actor.approveRewardRequest(requestId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allRewardRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['pendingRewardRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['userAnalytics'] });
-      toast.success('Reward request approved');
+      queryClient.invalidateQueries({ queryKey: ["allRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["platformStats"] });
+      queryClient.invalidateQueries({ queryKey: ["userAnalytics"] });
+      toast.success("Reward request approved");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to approve request');
+      toast.error(error.message || "Failed to approve request");
     },
   });
 }
@@ -285,35 +317,81 @@ export function useRejectRewardRequest() {
 
   return useMutation({
     mutationFn: async (requestId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend doesn't have rejectRewardRequest, so this will fail
-      // Keeping the structure for future implementation
-      throw new Error('Reject functionality not yet implemented in backend');
+      if (!actor) throw new Error("Actor not available");
+      return actor.rejectRewardRequest(requestId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allRewardRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['pendingRewardRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['userAnalytics'] });
-      toast.success('Reward request rejected');
+      queryClient.invalidateQueries({ queryKey: ["allRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["platformStats"] });
+      queryClient.invalidateQueries({ queryKey: ["userAnalytics"] });
+      toast.success("Reward request rejected");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to reject request');
+      toast.error(error.message || "Failed to reject request");
     },
   });
 }
 
-// Admin - Analytics
-export function useGetUserAnalytics() {
-  // Return mock data since backend doesn't have this method
-  return useQuery<{ totalUsers: bigint; totalPoints: bigint; totalRewardRequests: bigint }>({
-    queryKey: ['userAnalytics'],
+export function useVerifyCashPayoutReceived() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (requestId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.verifyCashPayoutReceived(requestId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingRewardRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["userRewards"] });
+      toast.success("Cash payout verified as received");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to verify cash payout");
+    },
+  });
+}
+
+// Platform Stats
+export function useGetStats() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<PlatformStats>({
+    queryKey: ["platformStats"],
     queryFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      return actor.getStats();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Admin - Analytics (now using real getStats)
+export function useGetUserAnalytics() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<{
+    totalUsers: bigint;
+    totalPointsIssued: bigint;
+    totalRewardRequests: bigint;
+  }>({
+    queryKey: ["userAnalytics"],
+    queryFn: async () => {
+      if (!actor)
+        return {
+          totalUsers: BigInt(0),
+          totalPointsIssued: BigInt(0),
+          totalRewardRequests: BigInt(0),
+        };
+      const stats = await actor.getStats();
       return {
-        totalUsers: BigInt(0),
-        totalPoints: BigInt(0),
-        totalRewardRequests: BigInt(0),
+        totalUsers: stats.totalUsers,
+        totalPointsIssued: stats.totalPointsIssued,
+        totalRewardRequests: stats.totalRewardRequests,
       };
     },
-    enabled: false,
+    enabled: !!actor && !isFetching,
   });
 }

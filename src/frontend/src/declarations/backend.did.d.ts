@@ -17,8 +17,25 @@ export interface Advertisement {
   'content' : string,
   'pointsReward' : bigint,
 }
+export interface PlatformStats {
+  'totalPointsIssued' : bigint,
+  'totalUsers' : bigint,
+  'totalRewardRequests' : bigint,
+}
+export interface RewardRequest {
+  'id' : string,
+  'status' : RewardStatus,
+  'userId' : UserId,
+  'rewardType' : RewardType,
+  'upiId' : [] | [string],
+  'amount' : bigint,
+}
+export type RewardStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
 export type RewardType = { 'cash' : null } |
   { 'giftCard' : null };
+export type UserId = Principal;
 export interface UserProfile {
   'name' : string,
   'upiId' : [] | [string],
@@ -34,19 +51,26 @@ export interface _SERVICE {
   'createAd' : ActorMethod<[string, string, bigint], string>,
   'deleteAd' : ActorMethod<[string], undefined>,
   'getActiveAds' : ActorMethod<[], Array<Advertisement>>,
+  'getAds' : ActorMethod<[], Array<Advertisement>>,
+  'getAllRewardRequests' : ActorMethod<[], Array<RewardRequest>>,
+  'getCallerRewardRequests' : ActorMethod<[], Array<RewardRequest>>,
   'getCallerUpiId' : ActorMethod<[], [] | [string]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getPendingRewardRequests' : ActorMethod<[], Array<RewardRequest>>,
+  'getStats' : ActorMethod<[], PlatformStats>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getUserUpiId' : ActorMethod<[Principal], [] | [string]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'redeemReward' : ActorMethod<[RewardType, bigint], string>,
+  'rejectRewardRequest' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setCallerUpiId' : ActorMethod<[string], undefined>,
   'updateAd' : ActorMethod<
     [string, string, string, bigint, boolean],
     undefined
   >,
+  'verifyCashPayoutReceived' : ActorMethod<[string], undefined>,
   'watchAd' : ActorMethod<[string], bigint>,
 }
 export declare const idlService: IDL.ServiceClass;

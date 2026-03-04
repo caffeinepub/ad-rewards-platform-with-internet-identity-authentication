@@ -1,10 +1,10 @@
-import type { Principal } from '@icp-sdk/core/principal';
-import { RewardType } from '../backend';
+import type { Principal } from "@icp-sdk/core/principal";
+import type { RewardType } from "../backend";
 
 export enum RewardStatus {
-  pending = 'pending',
-  approved = 'approved',
-  rejected = 'rejected',
+  pending = "pending",
+  approved = "approved",
+  rejected = "rejected",
 }
 
 export interface RewardRequest {

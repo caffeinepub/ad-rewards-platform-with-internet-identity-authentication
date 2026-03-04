@@ -1,98 +1,64 @@
 import Map "mo:core/Map";
-import Nat "mo:core/Nat";
 import List "mo:core/List";
+import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
+import Text "mo:core/Text";
 
 module {
-  public type OldUserProfile = {
+  type UserId = Principal;
+
+  type UserProfile = {
     name : Text;
     points : Nat;
+    upiId : ?Text;
   };
 
-  public type OldRewardRequest = {
+  type RewardType = {
+    #cash;
+    #giftCard;
+  };
+
+  type RewardStatus = {
+    #pending;
+    #approved;
+    #rejected;
+  };
+
+  type RewardRequest = {
     id : Text;
-    userId : Principal;
-    rewardType : {
-      #cash;
-      #giftCard;
-    };
+    userId : UserId;
+    rewardType : RewardType;
     amount : Nat;
-    status : {
-      #pending;
-      #approved;
-      #rejected;
-    };
+    status : RewardStatus;
+    upiId : ?Text;
   };
 
-  public type OldActor = {
-    userProfiles : Map.Map<Principal, OldUserProfile>;
-    advertisements : Map.Map<Text, {
-      id : Text;
-      title : Text;
-      content : Text;
-      pointsReward : Nat;
-      active : Bool;
-    }>;
-    rewardRequests : Map.Map<Text, OldRewardRequest>;
+  type Advertisement = {
+    id : Text;
+    title : Text;
+    content : Text;
+    pointsReward : Nat;
+    active : Bool;
+  };
+
+  type OldActor = {
+    userProfiles : Map.Map<Principal, UserProfile>;
+    advertisements : Map.Map<Text, Advertisement>;
+    rewardRequests : Map.Map<Text, RewardRequest>;
     userWatchedAds : Map.Map<Principal, List.List<Text>>;
     nextRewardId : Nat;
   };
 
-  public type NewUserProfile = {
-    name : Text;
-    points : Nat;
-    upiId : ?Text;
-  };
-
-  public type NewRewardRequest = {
-    id : Text;
-    userId : Principal;
-    rewardType : {
-      #cash;
-      #giftCard;
-    };
-    amount : Nat;
-    status : {
-      #pending;
-      #approved;
-      #rejected;
-    };
-    upiId : ?Text;
-  };
-
-  public type NewActor = {
-    userProfiles : Map.Map<Principal, NewUserProfile>;
-    advertisements : Map.Map<Text, {
-      id : Text;
-      title : Text;
-      content : Text;
-      pointsReward : Nat;
-      active : Bool;
-    }>;
-    rewardRequests : Map.Map<Text, NewRewardRequest>;
+  type NewActor = {
+    userProfiles : Map.Map<Principal, UserProfile>;
+    advertisements : Map.Map<Text, Advertisement>;
+    rewardRequests : Map.Map<Text, RewardRequest>;
     userWatchedAds : Map.Map<Principal, List.List<Text>>;
+    totalPointsIssued : Nat;
     nextRewardId : Nat;
   };
 
   public func run(old : OldActor) : NewActor {
-    let newUserProfiles = old.userProfiles.map<Principal, OldUserProfile, NewUserProfile>(
-      func(_id, profile) {
-        {
-          profile with upiId = null;
-        };
-      }
-    );
-    let newRewardRequests = old.rewardRequests.map<Text, OldRewardRequest, NewRewardRequest>(
-      func(_id, reward) {
-        {
-          reward with upiId = null;
-        };
-      }
-    );
-    {
-      old with
-      userProfiles = newUserProfiles;
-      rewardRequests = newRewardRequests;
-    };
+    { old with totalPointsIssued = 0 };
   };
 };

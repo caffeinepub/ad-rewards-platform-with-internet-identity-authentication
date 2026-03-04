@@ -1,112 +1,172 @@
-import { useState, useEffect } from 'react';
-import { useRedeemReward, useGetCallerUserProfile, useSetCallerUpiId, useGetUserRewards } from '../../hooks/useQueries';
-import type { RewardRequest } from '../../types/rewards';
-import { RewardStatus } from '../../types/rewards';
-import { RewardType } from '../../backend';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Gift, DollarSign, CreditCard, Plus, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Gift,
+  Loader2,
+  Plus,
+  XCircle,
+} from "lucide-react";
+import { useState } from "react";
+import type { RewardRequest } from "../../backend";
+import { RewardStatus, RewardType } from "../../backend";
+import {
+  useGetCallerUserProfile,
+  useGetUserRewards,
+  useRedeemReward,
+  useSetCallerUpiId,
+} from "../../hooks/useQueries";
+
+const CASH_MIN_POINTS = 50;
+const GIFT_CARD_MIN_POINTS = 500;
 
 interface RewardsSectionProps {
-  rewards: RewardRequest[];
-  isLoading: boolean;
   userPoints: number;
 }
 
-export default function RewardsSection({ rewards, isLoading, userPoints }: RewardsSectionProps) {
+export default function RewardsSection({ userPoints }: RewardsSectionProps) {
   const [showRedeemDialog, setShowRedeemDialog] = useState(false);
-  const [rewardType, setRewardType] = useState<'cash' | 'giftCard'>('cash');
-  const [amount, setAmount] = useState('');
-  const [upiId, setUpiId] = useState('');
-  const [showUpiInput, setShowUpiInput] = useState(false);
-  
+  const [rewardType, setRewardType] = useState<"cash" | "giftCard">("cash");
+  const [amount, setAmount] = useState("");
+  const [upiId, setUpiId] = useState("");
+
   const { data: userProfile } = useGetCallerUserProfile();
+  const { data: rewards = [], isLoading } = useGetUserRewards();
   const { mutate: redeemReward, isPending: isRedeeming } = useRedeemReward();
   const { mutate: saveUpiId, isPending: isSavingUpi } = useSetCallerUpiId();
 
-  const currentUpiId = userProfile?.upiId || '';
-  const hasUpiId = currentUpiId && currentUpiId.length > 0;
+  const currentUpiId = userProfile?.upiId || "";
+  const hasUpiId = currentUpiId.length > 0;
+  const needsUpiForCash = rewardType === "cash" && !hasUpiId;
 
-  useEffect(() => {
-    if (userProfile?.upiId) {
-      setUpiId(userProfile.upiId);
+  const minPoints =
+    rewardType === "cash" ? CASH_MIN_POINTS : GIFT_CARD_MIN_POINTS;
+  const amountNum = Number.parseInt(amount) || 0;
+  const isAmountValid = amountNum >= minPoints && amountNum <= userPoints;
+  const canRedeem =
+    isAmountValid && (!needsUpiForCash || upiId.trim().length > 0);
+  const isPending = isRedeeming || isSavingUpi;
+
+  const handleOpenDialog = () => {
+    if (hasUpiId) {
+      setUpiId(currentUpiId);
     }
-  }, [userProfile]);
+    setShowRedeemDialog(true);
+  };
 
   const handleRedeem = () => {
-    const amountNum = parseInt(amount);
-    if (amountNum > 0 && amountNum <= userPoints) {
-      // For cash redemptions, check UPI ID
-      if (rewardType === 'cash' && !hasUpiId && !upiId.trim()) {
-        setShowUpiInput(true);
-        return;
-      }
+    if (!isAmountValid) return;
 
-      // If UPI ID was just entered, save it first
-      if (rewardType === 'cash' && !hasUpiId && upiId.trim()) {
-        saveUpiId(upiId.trim(), {
+    const doRedeem = () => {
+      redeemReward(
+        { rewardType: RewardType[rewardType], amount: BigInt(amountNum) },
+        {
           onSuccess: () => {
-            // After saving UPI, proceed with redemption
-            redeemReward(
-              { rewardType: RewardType[rewardType], amount: BigInt(amountNum) },
-              {
-                onSuccess: () => {
-                  setShowRedeemDialog(false);
-                  setAmount('');
-                  setShowUpiInput(false);
-                },
-              }
-            );
+            setShowRedeemDialog(false);
+            setAmount("");
+            setUpiId("");
           },
-        });
-      } else {
-        redeemReward(
-          { rewardType: RewardType[rewardType], amount: BigInt(amountNum) },
-          {
-            onSuccess: () => {
-              setShowRedeemDialog(false);
-              setAmount('');
-              setShowUpiInput(false);
-            },
-          }
-        );
-      }
+        },
+      );
+    };
+
+    if (rewardType === "cash" && !hasUpiId && upiId.trim()) {
+      saveUpiId(upiId.trim(), { onSuccess: doRedeem });
+    } else {
+      doRedeem();
     }
   };
 
-  const getStatusBadge = (status: RewardStatus) => {
+  const getStatusConfig = (status: RewardStatus) => {
     switch (status) {
       case RewardStatus.pending:
-        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">Pending</Badge>;
+        return {
+          badge: (
+            <Badge
+              variant="outline"
+              className="gap-1 bg-amber-500/10 text-amber-600 border-amber-300 dark:text-amber-400"
+            >
+              <Clock className="h-3 w-3" />
+              Pending
+            </Badge>
+          ),
+          borderColor: "border-l-amber-400",
+        };
       case RewardStatus.approved:
-        return <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400">Approved</Badge>;
+        return {
+          badge: (
+            <Badge
+              variant="outline"
+              className="gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-300 dark:text-emerald-400"
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              Approved
+            </Badge>
+          ),
+          borderColor: "border-l-emerald-400",
+        };
       case RewardStatus.rejected:
-        return <Badge variant="outline" className="bg-red-500/10 text-red-600 dark:text-red-400">Rejected</Badge>;
+        return {
+          badge: (
+            <Badge
+              variant="outline"
+              className="gap-1 bg-red-500/10 text-red-600 border-red-300 dark:text-red-400"
+            >
+              <XCircle className="h-3 w-3" />
+              Rejected
+            </Badge>
+          ),
+          borderColor: "border-l-red-400",
+        };
     }
   };
 
   const getRewardTypeIcon = (type: RewardType) => {
-    return type === RewardType.cash ? <DollarSign className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />;
+    return type === RewardType.cash ? (
+      <DollarSign className="h-4 w-4 text-emerald-500" />
+    ) : (
+      <CreditCard className="h-4 w-4 text-blue-500" />
+    );
   };
-
-  const isPending = isRedeeming || isSavingUpi;
-  const canRedeem = amount && parseInt(amount) > 0 && parseInt(amount) <= userPoints;
-  const needsUpiForCash = rewardType === 'cash' && !hasUpiId;
 
   if (isLoading) {
     return (
       <div className="space-y-4">
         {[1, 2].map((i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i}>
             <CardHeader>
-              <div className="h-6 w-1/3 rounded bg-muted" />
-              <div className="h-4 w-1/4 rounded bg-muted" />
+              <Skeleton className="h-6 w-1/3 mb-2" />
+              <Skeleton className="h-4 w-1/4" />
             </CardHeader>
           </Card>
         ))}
@@ -119,103 +179,180 @@ export default function RewardsSection({ rewards, isLoading, userPoints }: Rewar
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Redeem Rewards</h2>
-            <p className="text-sm text-muted-foreground">Exchange your points for real rewards</p>
+            <h2 className="text-2xl font-bold">My Rewards</h2>
+            <p className="text-sm text-muted-foreground">
+              Redeem your points for cash (UPI) or gift cards
+            </p>
           </div>
-          <Button onClick={() => setShowRedeemDialog(true)} className="gap-2">
+          <Button
+            onClick={handleOpenDialog}
+            className="gap-2"
+            data-ocid="rewards.redeem_button"
+          >
             <Plus className="h-4 w-4" />
             Redeem Points
           </Button>
         </div>
 
+        {/* Minimums info */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+            <DollarSign className="h-5 w-5 text-emerald-500 shrink-0" />
+            <div>
+              <p className="text-xs font-medium">Cash via UPI</p>
+              <p className="text-xs text-muted-foreground">
+                Minimum {CASH_MIN_POINTS} points
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+            <CreditCard className="h-5 w-5 text-blue-500 shrink-0" />
+            <div>
+              <p className="text-xs font-medium">Gift Card</p>
+              <p className="text-xs text-muted-foreground">
+                Minimum {GIFT_CARD_MIN_POINTS} points
+              </p>
+            </div>
+          </div>
+        </div>
+
         {rewards.length === 0 ? (
-          <Card>
+          <Card data-ocid="rewards.empty_state">
             <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-4 py-12">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                 <Gift className="h-8 w-8 text-muted-foreground" />
               </div>
               <div className="text-center">
                 <h3 className="text-lg font-semibold">No redemptions yet</h3>
-                <p className="text-sm text-muted-foreground">Start redeeming your points for rewards</p>
+                <p className="text-sm text-muted-foreground">
+                  Start watching ads and redeem your points for rewards
+                </p>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenDialog}
+                data-ocid="rewards.redeem_button"
+              >
+                Redeem your first reward
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
-            {rewards.map((reward) => (
-              <Card key={reward.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        {getRewardTypeIcon(reward.rewardType)}
+            {rewards.map((reward: RewardRequest, index: number) => {
+              const statusConfig = getStatusConfig(reward.status);
+              return (
+                <Card
+                  key={reward.id}
+                  data-ocid={`rewards.item.${index + 1}`}
+                  className={`border-l-4 ${statusConfig?.borderColor}`}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+                          {getRewardTypeIcon(reward.rewardType)}
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">
+                            {reward.rewardType === RewardType.cash
+                              ? "Cash Payout (UPI)"
+                              : "Gift Card"}
+                          </CardTitle>
+                          <CardDescription>
+                            <span className="font-medium text-foreground">
+                              {Number(reward.amount)} points
+                            </span>
+                            {reward.rewardType === RewardType.cash &&
+                              reward.upiId && (
+                                <span className="ml-2 font-mono text-xs">
+                                  → {reward.upiId}
+                                </span>
+                              )}
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-lg">
-                          {reward.rewardType === RewardType.cash ? 'Cash Reward' : 'Gift Card'}
-                        </CardTitle>
-                        <CardDescription>{Number(reward.amount)} points</CardDescription>
-                      </div>
+                      {statusConfig?.badge}
                     </div>
-                    {getStatusBadge(reward.status)}
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
+                  </CardHeader>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
 
-      <Dialog open={showRedeemDialog} onOpenChange={setShowRedeemDialog}>
+      <Dialog
+        open={showRedeemDialog}
+        onOpenChange={setShowRedeemDialog}
+        data-ocid="rewards.redeem_dialog"
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Redeem Points</DialogTitle>
             <DialogDescription>
-              You have {userPoints} points available to redeem
+              You have <strong>{userPoints}</strong> points available to redeem
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+
+          <div className="space-y-4 py-2">
+            {/* Reward Type */}
             <div className="space-y-2">
               <Label htmlFor="rewardType">Reward Type</Label>
-              <Select value={rewardType} onValueChange={(value: 'cash' | 'giftCard') => setRewardType(value)}>
-                <SelectTrigger id="rewardType">
+              <Select
+                value={rewardType}
+                onValueChange={(value: "cash" | "giftCard") => {
+                  setRewardType(value);
+                  setAmount("");
+                }}
+              >
+                <SelectTrigger
+                  id="rewardType"
+                  data-ocid="rewards.reward_type_select"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Cash (UPI)</SelectItem>
-                  <SelectItem value="giftCard">Gift Card</SelectItem>
+                  <SelectItem value="cash">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-emerald-500" />
+                      Cash via UPI (min. {CASH_MIN_POINTS} pts)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="giftCard">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-blue-500" />
+                      Gift Card (min. {GIFT_CARD_MIN_POINTS} pts)
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              {rewardType === 'cash' && (
-                <p className="text-xs text-muted-foreground">
-                  Cash rewards are processed via UPI after admin approval. Minimum: 50 points.
-                </p>
-              )}
-              {rewardType === 'giftCard' && (
-                <p className="text-xs text-muted-foreground">
-                  Gift cards are processed after admin approval. Minimum: 500 points.
-                </p>
-              )}
             </div>
 
-            {needsUpiForCash && (showUpiInput || !hasUpiId) && (
+            {/* UPI ID input for cash when not set */}
+            {needsUpiForCash && (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium">UPI ID Required for Cash Redemption</p>
-                    <div className="space-y-2">
-                      <Label htmlFor="upiIdInput">Enter your UPI ID</Label>
+                  <div className="space-y-2 mt-1">
+                    <p className="text-sm font-medium">
+                      UPI ID required for cash payout
+                    </p>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="redeemUpiId" className="text-xs">
+                        Your UPI ID
+                      </Label>
                       <Input
-                        id="upiIdInput"
-                        type="text"
-                        placeholder="yourname@upi"
+                        id="redeemUpiId"
+                        placeholder="yourname@upi or yourname@bank"
                         value={upiId}
                         onChange={(e) => setUpiId(e.target.value)}
                         disabled={isPending}
+                        data-ocid="rewards.upi_input"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Your UPI ID will be saved for future redemptions.
+                        Will be saved for future use.
                       </p>
                     </div>
                   </div>
@@ -223,38 +360,60 @@ export default function RewardsSection({ rewards, isLoading, userPoints }: Rewar
               </Alert>
             )}
 
+            {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="amount">Points to Redeem</Label>
               <Input
                 id="amount"
                 type="number"
-                placeholder="Enter amount"
+                placeholder={`Enter amount (min. ${minPoints})`}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                min="1"
+                min={minPoints}
                 max={userPoints}
                 disabled={isPending}
+                data-ocid="rewards.amount_input"
               />
-              {amount && parseInt(amount) > userPoints && (
-                <p className="text-sm text-destructive">Insufficient points</p>
+              {amount && amountNum < minPoints && (
+                <p className="text-xs text-destructive">
+                  Minimum {minPoints} points required for{" "}
+                  {rewardType === "cash" ? "cash" : "gift card"} redemption
+                </p>
+              )}
+              {amount && amountNum > userPoints && (
+                <p className="text-xs text-destructive">
+                  You only have {userPoints} points
+                </p>
+              )}
+              {amount && isAmountValid && (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  ✓ {amountNum} points will be redeemed
+                </p>
               )}
             </div>
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRedeemDialog(false)} disabled={isPending}>
+            <Button
+              variant="outline"
+              onClick={() => setShowRedeemDialog(false)}
+              disabled={isPending}
+              data-ocid="rewards.cancel_button"
+            >
               Cancel
             </Button>
             <Button
               onClick={handleRedeem}
-              disabled={isPending || !canRedeem || (needsUpiForCash && !upiId.trim())}
+              disabled={isPending || !canRedeem}
+              data-ocid="rewards.submit_button"
             >
               {isPending ? (
                 <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing...
                 </>
               ) : (
-                'Redeem'
+                "Redeem"
               )}
             </Button>
           </DialogFooter>

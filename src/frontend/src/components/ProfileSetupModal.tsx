@@ -1,23 +1,29 @@
-import { useState } from 'react';
-import { useSaveCallerUserProfile } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { UserCircle } from "lucide-react";
+import { useState } from "react";
+import { useSaveCallerUserProfile } from "../hooks/useQueries";
 
 export default function ProfileSetupModal() {
-  const [name, setName] = useState('');
-  const [upiId, setUpiId] = useState('');
+  const [name, setName] = useState("");
+  const [upiId, setUpiId] = useState("");
   const { mutate: saveProfile, isPending } = useSaveCallerUserProfile();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      saveProfile({ 
-        name: name.trim(), 
+      saveProfile({
+        name: name.trim(),
         points: BigInt(0),
-        upiId: upiId.trim() || undefined
+        upiId: upiId.trim() || undefined,
       });
     }
   };
@@ -63,14 +69,18 @@ export default function ProfileSetupModal() {
                 Required for cash reward redemptions. You can add this later.
               </p>
             </div>
-            <Button type="submit" className="w-full" disabled={isPending || !name.trim()}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isPending || !name.trim()}
+            >
               {isPending ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Creating Profile...
                 </>
               ) : (
-                'Continue'
+                "Continue"
               )}
             </Button>
           </form>

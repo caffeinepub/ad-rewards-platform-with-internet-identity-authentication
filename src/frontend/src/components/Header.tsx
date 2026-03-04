@@ -1,9 +1,9 @@
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { useGetCallerUserProfile, useIsCallerAdmin } from '../hooks/useQueries';
-import { Moon, Sun, Coins, LogOut, LogIn } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
+import { Coins, LogIn, LogOut, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useGetCallerUserProfile, useIsCallerAdmin } from "../hooks/useQueries";
 
 export default function Header() {
   const { login, clear, loginStatus, identity } = useInternetIdentity();
@@ -13,7 +13,7 @@ export default function Header() {
   const { data: isAdmin } = useIsCallerAdmin();
 
   const isAuthenticated = !!identity;
-  const disabled = loginStatus === 'logging-in';
+  const disabled = loginStatus === "logging-in";
 
   const handleAuth = async () => {
     if (isAuthenticated) {
@@ -23,8 +23,8 @@ export default function Header() {
       try {
         await login();
       } catch (error: any) {
-        console.error('Login error:', error);
-        if (error.message === 'User is already authenticated') {
+        console.error("Login error:", error);
+        if (error.message === "User is already authenticated") {
           await clear();
           setTimeout(() => login(), 300);
         }
@@ -33,7 +33,7 @@ export default function Header() {
   };
 
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
@@ -54,7 +54,9 @@ export default function Header() {
             <div className="hidden sm:flex items-center gap-2 rounded-full bg-accent px-4 py-2">
               <span className="text-sm font-medium">{userProfile.name}</span>
               <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-sm font-bold text-primary">{Number(userProfile.points)} pts</span>
+              <span className="text-sm font-bold text-primary">
+                {Number(userProfile.points)} pts
+              </span>
             </div>
           )}
 
@@ -72,7 +74,7 @@ export default function Header() {
           <Button
             onClick={handleAuth}
             disabled={disabled}
-            variant={isAuthenticated ? 'outline' : 'default'}
+            variant={isAuthenticated ? "outline" : "default"}
             className="gap-2"
           >
             {disabled ? (
